@@ -1,0 +1,38 @@
+# Retiree hobbyist: minimal "work" -- relabeled to a light volunteer/admin
+# task via work_label rather than a job in the usual sense. Strong day
+# chronotype, lowest volume, slow/deliberate typing.
+display_name: "Retiree Hobbyist"
+chronotype: day
+work_label: "Volunteer admin"
+typing:
+  cpm: 140
+  error_rate: 0.02
+tab_hoarding: 0.35
+daily_search_ceiling: 3
+work_leisure_ratio: 0.15
+
+work_topics:
+  - name: "genealogy society volunteer newsletter"
+    strength: 0.40
+    decay_rate: 0.020
+    reinforcement: 0.30
+  - name: "a recurring tax form for the historical society"
+    strength: 0.30
+    decay_rate: 0.050
+    reinforcement: 0.25
+    chronic_forget: true
+
+leisure_topics:
+  - name: "family genealogy records research"
+    strength: 0.65
+    decay_rate: 0.010
+    reinforcement: 0.30
+  - name: "vegetable garden companion planting"
+    strength: 0.60
+    decay_rate: 0.012
+    reinforcement: 0.30
+  - name: "identifying local backyard birds"
+    strength: 0.30
+    decay_rate: 0.040
+    reinforcement: 0.25
+    chronic_forget: true

@@ -19,21 +19,12 @@ import sys
 import time
 
 from selenium import webdriver
-from selenium.common.exceptions import (
-    ElementClickInterceptedException,
-    NoSuchElementException,
-    StaleElementReferenceException,
-    TimeoutException,
-    WebDriverException,
-)
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.edge.options import Options
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import WebDriverWait
+
+from autoedge.driving.runner import run_search as _run_search
+from autoedge.driving.targets.bing_target import BingTarget
 
 PROFILE_DIR = os.path.join(os.environ["LOCALAPPDATA"], "autoedge", "edge-profile")
-BING = "https://www.bing.com/"
 
 # ---------------------------------------------------------------------------
 # Topic bank. Each topic has a mode (which template set applies), items the
@@ -314,62 +305,9 @@ class SearchSession:
 
 
 # ---------------------------------------------------------------------------
-# Human behavior primitives
-# ---------------------------------------------------------------------------
-
-def pause(lo, hi):
-    time.sleep(random.uniform(lo, hi))
-
-
-def human_type(element, text):
-    for ch in text:
-        element.send_keys(ch)
-        time.sleep(random.uniform(0.05, 0.22))
-        if random.random() < 0.04:  # occasional hesitation mid-thought
-            time.sleep(random.uniform(0.4, 1.1))
-
-
-def human_scroll(driver):
-    """Scroll a page the way a person with a finite attention span reads it.
-
-    Attention starts high (small scrolls, long dwells = careful reading) and
-    decays multiplicatively. As it drops the scrolls get bigger and dwells
-    shorter (skimming). ~12% of steps scroll back up to re-read, and once
-    attention falls below a threshold the reader gives up wherever they are.
-    """
-    attention = random.uniform(0.75, 1.0)
-    give_up_at = random.uniform(0.12, 0.25)
-
-    while attention > give_up_at:
-        height = driver.execute_script("return document.body.scrollHeight")
-        pos = driver.execute_script("return window.pageYOffset")
-        viewport = driver.execute_script("return window.innerHeight")
-        if pos + viewport >= height - 50:
-            break
-
-        if random.random() < 0.12:
-            step = -random.randint(150, 450)   # re-read something above
-        else:
-            skim = 1.8 - attention              # low attention -> bigger jumps
-            step = int(random.randint(220, 480) * skim)
-
-        # glide in small increments rather than teleporting
-        remaining = step
-        while abs(remaining) > 0:
-            inc = max(min(remaining, random.randint(40, 90)), -random.randint(40, 90))
-            driver.execute_script("window.scrollBy(0, arguments[0])", inc)
-            remaining -= inc
-            time.sleep(random.uniform(0.02, 0.06))
-
-        # dwell: reading time scales with how engaged we still are
-        time.sleep(random.uniform(0.6, 2.8) * (0.4 + attention))
-        attention *= random.uniform(0.86, 0.97)
-
-    pause(0.3, 1.2)
-
-
-# ---------------------------------------------------------------------------
-# Bing plumbing
+# Bing plumbing lives in autoedge/driving now (BingTarget + the target-
+# agnostic runner), so both this legacy script and any future driver share
+# one implementation instead of two.
 # ---------------------------------------------------------------------------
 
 def launch_edge():
@@ -381,153 +319,6 @@ def launch_edge():
     opts.add_experimental_option("excludeSwitches", ["enable-automation"])
     opts.add_experimental_option("useAutomationExtension", False)
     return webdriver.Edge(options=opts)
-
-
-def dismiss_cookie_banner(driver):
-    try:
-        driver.find_element(By.ID, "bnp_btn_accept").click()
-        pause(0.5, 1.0)
-    except (NoSuchElementException, ElementClickInterceptedException):
-        pass
-
-
-def is_signed_in(driver):
-    """On bing.com, #id_n holds the display name when a Microsoft account is
-    signed in; the #id_a anchor reads 'Sign in' when it is not."""
-    try:
-        name = driver.find_element(By.ID, "id_n")
-        if name.get_attribute("textContent").strip():
-            return True
-    except NoSuchElementException:
-        pass
-    try:
-        return "sign in" not in driver.find_element(By.ID, "id_a").text.strip().lower()
-    except NoSuchElementException:
-        return False
-
-
-def ensure_signed_in(driver):
-    driver.get(BING)
-    dismiss_cookie_banner(driver)
-    pause(1.0, 2.0)
-    if is_signed_in(driver):
-        print("[+] Microsoft account is signed in.")
-        return
-    print("[!] Not signed in. Please sign in to your Microsoft account in the")
-    print("    Edge window that just opened (click the profile icon, top right).")
-    input("    Press Enter here once you are signed in... ")
-    driver.get(BING)
-    pause(1.0, 2.0)
-    if not is_signed_in(driver):
-        print("[!] Still can't confirm the login - continuing anyway.")
-    else:
-        print("[+] Login confirmed.")
-
-
-def submit_search(driver, query):
-    driver.get(BING)
-    dismiss_cookie_banner(driver)
-    box = WebDriverWait(driver, 10).until(
-        EC.element_to_be_clickable((By.ID, "sb_form_q"))
-    )
-    box.click()
-    box.send_keys(Keys.CONTROL, "a")
-    box.send_keys(Keys.DELETE)
-    human_type(box, query)
-    pause(0.3, 0.9)
-    box.send_keys(Keys.RETURN)
-    WebDriverWait(driver, 15).until(
-        EC.presence_of_element_located((By.CSS_SELECTOR, "li.b_algo"))
-    )
-
-
-def result_links(driver):
-    """Clickable organic-result anchors on the current results page."""
-    anchors = driver.find_elements(By.CSS_SELECTOR, "li.b_algo h2 a")
-    return [a for a in anchors if a.get_attribute("href")]
-
-
-def goto_next_page(driver):
-    try:
-        nxt = driver.find_element(By.CSS_SELECTOR, "a.sb_pagN")
-        driver.execute_script("arguments[0].scrollIntoView({block:'center'})", nxt)
-        pause(0.5, 1.2)
-        nxt.click()
-        WebDriverWait(driver, 15).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "li.b_algo"))
-        )
-        return True
-    except (NoSuchElementException, TimeoutException,
-            ElementClickInterceptedException, StaleElementReferenceException):
-        return False
-
-
-def visit_result(driver, index):
-    """Click the index-th organic result, read it like a human, come back."""
-    links = result_links(driver)
-    if index >= len(links):
-        return
-    link = links[index]
-    serp = driver.current_url
-    try:
-        driver.execute_script("arguments[0].scrollIntoView({block:'center'})", link)
-        pause(0.6, 1.5)
-        title = link.text[:60]
-        link.click()
-        print(f"      -> reading: {title}")
-        pause(2.0, 4.0)  # page settle / first impression
-        human_scroll(driver)
-    except WebDriverException as exc:
-        print(f"      -> couldn't read that one ({type(exc).__name__}), moving on")
-    finally:
-        # get back to the results page no matter how the site behaved
-        for _ in range(3):
-            if "bing.com/search" in driver.current_url:
-                break
-            driver.back()
-            pause(1.0, 2.0)
-        if "bing.com/search" not in driver.current_url:
-            driver.get(serp)
-            pause(1.0, 2.0)
-
-
-def disperse(total_clicks, num_pages):
-    """Spread total_clicks across num_pages, every page getting >= 0."""
-    counts = [0] * num_pages
-    for _ in range(total_clicks):
-        counts[random.randrange(num_pages)] += 1
-    return counts
-
-
-def run_search(driver, query):
-    num_pages = random.randint(1, 3)
-    num_clicks = random.randint(2, 7)
-    plan = disperse(num_clicks, num_pages)
-    print(f'  searching: "{query}"')
-    print(f"  plan: {num_pages} page(s), {num_clicks} click(s) dispersed as {plan}")
-
-    submit_search(driver, query)
-
-    for page, clicks in enumerate(plan, start=1):
-        pause(1.0, 2.5)
-        human_scroll(driver)  # skim the results page itself
-
-        available = len(result_links(driver))
-        if available == 0:
-            break
-        picks = random.sample(range(min(available, 10)), min(clicks, available, 10))
-        random.shuffle(picks)  # click out of order
-        for index in picks:
-            visit_result(driver, index)
-            pause(1.5, 3.5)
-
-        if page < num_pages:
-            driver.execute_script(
-                "window.scrollTo(0, document.body.scrollHeight)")
-            pause(0.8, 1.6)
-            if not goto_next_page(driver):
-                print("  no further result pages; stopping this search early")
-                break
 
 
 # ---------------------------------------------------------------------------
@@ -572,8 +363,9 @@ def main():
 
     print("[*] Launching Edge...")
     driver = launch_edge()
+    target = BingTarget()
     try:
-        ensure_signed_in(driver)
+        target.ensure_ready(driver)
         session = SearchSession()
         used = set()
         deadline = time.monotonic() + value if mode == "time" else None
@@ -592,7 +384,7 @@ def main():
                 print(f"[search {i} | {left:.0f} min left]")
             else:
                 print(f"[{i}/{value}]")
-            run_search(driver, query)
+            _run_search(driver, target, query)
             wait = random.uniform(4, 12)
             print(f"  pausing {wait:.0f}s")
             time.sleep(wait)

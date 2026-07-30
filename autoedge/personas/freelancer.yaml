@@ -1,0 +1,44 @@
+# Freelancer/contractor: work topics churn faster (higher decay_rate) to
+# model shifting active clients; irregular chronotype since hours aren't
+# 9-5; tidier than average (low tab_hoarding) out of professional habit.
+display_name: "Freelancer / Contractor"
+chronotype: irregular
+typing:
+  cpm: 230
+  error_rate: 0.025
+tab_hoarding: 0.30
+daily_search_ceiling: 7
+work_leisure_ratio: 0.60
+
+work_topics:
+  - name: "client A website migration checklist"
+    strength: 0.50
+    decay_rate: 0.080
+    reinforcement: 0.30
+  - name: "client B invoice and contract templates"
+    strength: 0.40
+    decay_rate: 0.070
+    reinforcement: 0.30
+  - name: "a recurring deploy-tool CLI flag"
+    strength: 0.30
+    decay_rate: 0.050
+    reinforcement: 0.25
+    chronic_forget: true
+  - name: "freelance day-rate benchmarking"
+    strength: 0.35
+    decay_rate: 0.040
+    reinforcement: 0.25
+
+leisure_topics:
+  - name: "trip planning for a future sabbatical"
+    strength: 0.50
+    decay_rate: 0.015
+    reinforcement: 0.30
+  - name: "personal finance for the self-employed"
+    strength: 0.45
+    decay_rate: 0.020
+    reinforcement: 0.30
+  - name: "budget travel gear"
+    strength: 0.40
+    decay_rate: 0.020
+    reinforcement: 0.30

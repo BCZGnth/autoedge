@@ -1,0 +1,41 @@
+# Parent balancing work and household admin: narrow, task-oriented work
+# topics with high focus during defined windows; lowest search volume of
+# the roster; sessions are fragmented (short, interrupted often) -- that
+# fragmentation is a SessionPlanner behavior, not a persona field.
+display_name: "Parent Balancing Work and Household Admin"
+chronotype: day
+typing:
+  cpm: 180
+  error_rate: 0.04
+tab_hoarding: 0.40
+daily_search_ceiling: 4
+work_leisure_ratio: 0.65
+
+work_topics:
+  - name: "quarterly expense report template"
+    strength: 0.40
+    decay_rate: 0.030
+    reinforcement: 0.30
+  - name: "school pickup and after-care scheduling"
+    strength: 0.30
+    decay_rate: 0.060
+    reinforcement: 0.25
+    chronic_forget: true
+  - name: "household budget spreadsheet setup"
+    strength: 0.35
+    decay_rate: 0.020
+    reinforcement: 0.30
+
+leisure_topics:
+  - name: "parenting advice for picky eaters"
+    strength: 0.50
+    decay_rate: 0.020
+    reinforcement: 0.30
+  - name: "easy weeknight recipes for kids"
+    strength: 0.50
+    decay_rate: 0.020
+    reinforcement: 0.30
+  - name: "local weekend events and activities"
+    strength: 0.40
+    decay_rate: 0.025
+    reinforcement: 0.30

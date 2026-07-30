@@ -1,0 +1,39 @@
+# Night-owl developer: evening/night chronotype, heavy tab-hoarder, fast
+# and error-prone typing.
+display_name: "Night-owl Developer"
+chronotype: night_owl
+typing:
+  cpm: 260
+  error_rate: 0.06
+tab_hoarding: 0.85
+daily_search_ceiling: 8
+work_leisure_ratio: 0.50
+
+work_topics:
+  - name: "rust async runtime internals"
+    strength: 0.50
+    decay_rate: 0.015
+    reinforcement: 0.30
+  - name: "a recurring null-pointer bug in the parser service"
+    strength: 0.40
+    decay_rate: 0.030
+    reinforcement: 0.30
+  - name: "docker compose networking flag"
+    strength: 0.30
+    decay_rate: 0.050
+    reinforcement: 0.25
+    chronic_forget: true
+
+leisure_topics:
+  - name: "roguelike game builds and strategies"
+    strength: 0.60
+    decay_rate: 0.015
+    reinforcement: 0.30
+  - name: "tech news threads"
+    strength: 0.55
+    decay_rate: 0.020
+    reinforcement: 0.30
+  - name: "mechanical keyboard switches"
+    strength: 0.40
+    decay_rate: 0.020
+    reinforcement: 0.30

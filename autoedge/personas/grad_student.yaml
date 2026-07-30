@@ -1,0 +1,44 @@
+# Grad student: heavy tab-hoarder, day chronotype, frequent post-lunch
+# leisure dip (handled by SessionPlanner's circadian weighting, not here).
+display_name: "Grad Student"
+chronotype: day
+typing:
+  cpm: 210
+  error_rate: 0.03
+tab_hoarding: 0.75
+daily_search_ceiling: 5
+work_leisure_ratio: 0.55
+
+work_topics:
+  - name: "soil microbiome carbon cycling research"
+    strength: 0.55
+    decay_rate: 0.010
+    reinforcement: 0.30
+  - name: "APA vs Chicago citation formatting"
+    strength: 0.30
+    decay_rate: 0.060
+    reinforcement: 0.25
+    chronic_forget: true
+  - name: "NSF and university grant deadlines"
+    strength: 0.40
+    decay_rate: 0.020
+    reinforcement: 0.30
+  - name: "R syntax for mixed-effects models"
+    strength: 0.35
+    decay_rate: 0.050
+    reinforcement: 0.25
+    chronic_forget: true
+
+leisure_topics:
+  - name: "bouldering and climbing gyms"
+    strength: 0.60
+    decay_rate: 0.010
+    reinforcement: 0.30
+  - name: "a fantasy tv show fandom"
+    strength: 0.50
+    decay_rate: 0.015
+    reinforcement: 0.30
+  - name: "weeknight recipes"
+    strength: 0.45
+    decay_rate: 0.020
+    reinforcement: 0.30
